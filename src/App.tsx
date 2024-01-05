@@ -39,7 +39,6 @@ const App: React.FC = () => {
     const [openSnack, setOpenSnack] = useState(false);
     const [choiceFlag, setChoiceFlag] = useState(false);
     const [buyFlag, setBuyFlag] = useState(false);
-    const [ctcGift, setCtcGift] = useState<ContractId>();
     const handleSnackClose = () => { setOpenSnack(false); };
     const handleOpenModal = () => { setOpenModal(true); }
     const handleCloseModal = () => { setOpenModal(false); }
@@ -86,7 +85,7 @@ const App: React.FC = () => {
         const supportedWallet = walletChoice as SupportedWalletName;
         const browserWallet = await mkBrowserWallet(supportedWallet);
         const buyerAddr32 = await browserWallet.getChangeAddress();
-        const buyerAddr = unAddressBech32(buyerAddr32);// TODO -- dep: hernan: this won't be needed soon
+        const buyerAddr = unAddressBech32(buyerAddr32);
 
         const buyer: Party = {address: buyerAddr};
         const receiver: Party = {address: toAddrRef};
@@ -94,25 +93,21 @@ const App: React.FC = () => {
         console.log(`Connecting to runtime instance...`);
         const runtimeLifecycle = await mkRuntimeLifecycle({
             walletName: supportedWallet,
-            runtimeURL: RUNTIME_URL,// TODO -- change this to the actual string for demo
+            runtimeURL: "https://marlowe-runtime-preprod-web.demo.scdev.aws.iohkdev.io",
         });
 
         const amtLovelace = parseADA(amtRef);
-
         const sGiftContract = mkSmartGift(amtLovelace, buyer, receiver);
 
         console.log(`Submitting contract to the blockchain...`);
         const [ctcID, txnID] = await runtimeLifecycle.contracts.createContract({
             contract: sGiftContract,
-            tags: smartGiftTag,
         });
-        setCtcGift(ctcID);
 
         const contractConfirm = await browserWallet.waitConfirmation(txnID);
-        console.log(`Contract creation txn confirmed is: ${contractConfirm}\nTXID(input to Cardanoscan): ${txnID}`);
 
         const bintAmount = BigInt(amtLovelace);
-
+        
         const deposit: IDeposit = {
             input_from_party: buyer,
             that_deposits: bintAmount,
@@ -122,16 +117,14 @@ const App: React.FC = () => {
 
         const depositInputs: Input[] = [deposit];
         const depositRequest: ApplyInputsRequest = {
-            inputs: depositInputs
+            inputs: depositInputs,
         };
 
         console.log(`Applying deposit txn...`);
-        const depositTxnId = await runtimeLifecycle.contracts.applyInputs(ctcID, depositRequest);
-        const depositConfirm = await browserWallet.waitConfirmation(depositTxnId);
+        const depositTxnID = await runtimeLifecycle.contracts.applyInputs(ctcID, depositRequest);
+        const depositConfirm = await browserWallet.waitConfirmation(depositTxnID);
 
-        console.log(`Deposit Confirm is: ${depositConfirm}\nThe contract is waiting for a Choice from the receiver..`);
-
-        // wait for choice at UI from receiver side
+        console.log(`Deposit confirm is: ${depositConfirm}\nThe contract is waiting for a choice from the receiver.`);
     };
 
     const spendSmartGift = () => {
@@ -163,13 +156,8 @@ const App: React.FC = () => {
         });
         // start here
         
-        // we'll hardcode and force a certain choice here, but in future videos
-        // I'll show you how to get this information from the blockchain for any
-        // contract relevant to your address or with your specified tags or filters
         const choiceName: ChoiceName = "purchase";
 
-        // we'll formulate our choices similar to how we do deposits
-        // leaning on the TS-SDK to tell us the info it needs and what format
         const choices: ChoiceId = {
             choice_name: choiceName,
             choice_owner: receiver,
@@ -177,26 +165,24 @@ const App: React.FC = () => {
 
         const purchaseChoice: IChoice = {
             for_choice_id: choices,
-            input_that_chooses_num: BigInt(choiceNum),
+            input_that_chooses_num: BigInt(choiceNum)
         };
-        
-        // this part is exactly the same as a Deposit
-        // we are just formulating an ApplyInputsRequest with
-        // different information for the Input
+
         const choiceInputs: Input[] = [purchaseChoice];
         const choiceRequest: ApplyInputsRequest = {
             inputs: choiceInputs,
         };
 
-        console.log(`Applying input choice...`);
-        // we are grabbing the contract ID from state here, but in future videos -- we'll show you
-        // how to retrieve this from the blockchain instead
-        const choiceTxn = await recRuntimeLifecycle.contracts.applyInputs(ctcGift as ContractId, choiceRequest);
-        console.log(`Choice TXN Receipt: ${choiceTxn}`);
-        const choiceConfirm = await browserWallet.waitConfirmation(choiceTxn);
+        const giftID = await recRuntimeLifecycle.contracts.getContractIds();
 
+        console.log(`Applying input choice...`);
+        const choiceTxn = await recRuntimeLifecycle.contracts.applyInputs(giftID[0], choiceRequest);
+        console.log(`Choice TXN Receipt: ${choiceTxn}`);
+
+        const choiceConfirm = await browserWallet.waitConfirmation(choiceTxn);
         console.log(`Choice confirm is: ${choiceConfirm}`);
-        // end, check wallet for purchase
+
+        // end, check the wallet for funds
     };
 
     const handleSpend = () => { handleChoiceSubmit(1); };
