@@ -96,6 +96,7 @@ const App: React.FC = () => {
             runtimeURL: "https://marlowe-runtime-preprod-web.demo.scdev.aws.iohkdev.io",
         });
 
+        // start here
         const amtLovelace = parseADA(amtRef);
         const sGiftContract = mkSmartGift(amtLovelace, buyer, receiver);
 
