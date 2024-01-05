@@ -2,9 +2,10 @@ import { Party } from '@marlowe.io/language-core-v1';
 
 export const views = {
     INTRO: 'Intro',
-    CONTRACTS: 'Contracts',
     SIMPLE_DEMO: 'Simple Demo',
     SMART_GIFT: 'Smart Gift',
+    BUY_GIFT: 'Buy Gift',
+    SPEND_GIFT: 'Spend Gift',
 }
 
 export const constants = {

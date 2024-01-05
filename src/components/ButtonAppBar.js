@@ -40,7 +40,7 @@ function ButtonAppBar({
     const walletCommon = () => {
         setOpenSnack(true);
         handleCloseModal();
-        setView(views.CONTRACTS);
+        setView(views.SMART_GIFT);
     }
     const handleNami = () => {
         walletCommon();
