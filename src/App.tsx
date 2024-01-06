@@ -73,7 +73,7 @@ const App: React.FC = () => {
      * 
      * 1. Prepare addresses
      * 2. Connect to runtime
-     * 3. Build Smart Contract
+     * 3. Build Smart Contract -- start here
      * 4. Submit contract and wait confirmation
      * 5. Prepare and submit deposit, wait confirmation
      * 6. Choice from receiver
@@ -85,7 +85,7 @@ const App: React.FC = () => {
         const supportedWallet = walletChoice as SupportedWalletName;
         const browserWallet = await mkBrowserWallet(supportedWallet);
         const buyerAddr32 = await browserWallet.getChangeAddress();
-        const buyerAddr = unAddressBech32(buyerAddr32);
+        const buyerAddr = unAddressBech32(buyerAddr32);// this wont be necessary
 
         const buyer: Party = {address: buyerAddr};
         const receiver: Party = {address: toAddrRef};
@@ -104,11 +104,10 @@ const App: React.FC = () => {
         const [ctcID, txnID] = await runtimeLifecycle.contracts.createContract({
             contract: sGiftContract,
         });
-
         const contractConfirm = await browserWallet.waitConfirmation(txnID);
-
-        const bintAmount = BigInt(amtLovelace);
         
+        const bintAmount = BigInt(amtLovelace);
+
         const deposit: IDeposit = {
             input_from_party: buyer,
             that_deposits: bintAmount,
@@ -122,10 +121,12 @@ const App: React.FC = () => {
         };
 
         console.log(`Applying deposit txn...`);
+
         const depositTxnID = await runtimeLifecycle.contracts.applyInputs(ctcID, depositRequest);
         const depositConfirm = await browserWallet.waitConfirmation(depositTxnID);
 
-        console.log(`Deposit confirm is: ${depositConfirm}\nThe contract is waiting for a choice from the receiver.`);
+        console.log(`Deposit confirm is: ${depositConfirm}.\nThe contract is waiting for a choice from the receiver.`);
+        // end of buyer interaction
     };
 
     const spendSmartGift = () => {
@@ -156,7 +157,7 @@ const App: React.FC = () => {
             runtimeURL: RUNTIME_URL,
         });
         // start here
-        
+
         const choiceName: ChoiceName = "purchase";
 
         const choices: ChoiceId = {
@@ -166,7 +167,7 @@ const App: React.FC = () => {
 
         const purchaseChoice: IChoice = {
             for_choice_id: choices,
-            input_that_chooses_num: BigInt(choiceNum)
+            input_that_chooses_num: BigInt(choiceNum),
         };
 
         const choiceInputs: Input[] = [purchaseChoice];
@@ -178,10 +179,11 @@ const App: React.FC = () => {
 
         console.log(`Applying input choice...`);
         const choiceTxn = await recRuntimeLifecycle.contracts.applyInputs(giftID[0], choiceRequest);
-        console.log(`Choice TXN Receipt: ${choiceTxn}`);
+        console.log(`Choice TXN receipt: ${choiceTxn}`);
 
         const choiceConfirm = await browserWallet.waitConfirmation(choiceTxn);
         console.log(`Choice confirm is: ${choiceConfirm}`);
+        
 
         // end, check the wallet for funds
     };
