@@ -15,7 +15,6 @@ import { mkRuntimeLifecycle } from '@marlowe.io/runtime-lifecycle/browser';
 import { SupportedWalletName } from '@marlowe.io/wallet/browser';
 import { ApplyInputsRequest } from '@marlowe.io/runtime-lifecycle/api';
 import { getInstalledWalletExtensions, mkBrowserWallet } from '@marlowe.io/wallet';
-import { unAddressBech32, ContractId } from '@marlowe.io/runtime-core';
 import { 
     Input, 
     IDeposit, 
@@ -24,8 +23,6 @@ import {
     ChoiceName,
     ChoiceId,
     IChoice,
-    TimeInterval,
-    Environment,
 } from '@marlowe.io/language-core-v1';
 
 const App: React.FC = () => {
@@ -84,8 +81,7 @@ const App: React.FC = () => {
 
         const supportedWallet = walletChoice as SupportedWalletName;
         const browserWallet = await mkBrowserWallet(supportedWallet);
-        const buyerAddr32 = await browserWallet.getChangeAddress();
-        const buyerAddr = unAddressBech32(buyerAddr32);// this wont be necessary
+        const buyerAddr = await browserWallet.getChangeAddress();
 
         const buyer: Party = {address: buyerAddr};
         const receiver: Party = {address: toAddrRef};
@@ -103,8 +99,10 @@ const App: React.FC = () => {
         console.log(`Submitting contract to the blockchain...`);
         const [ctcID, txnID] = await runtimeLifecycle.contracts.createContract({
             contract: sGiftContract,
+            minimumLovelaceUTxODeposit: 3_000_000,
         });
         const contractConfirm = await browserWallet.waitConfirmation(txnID);
+        console.log(`Contract creating txn is: ${contractConfirm}`);
         
         const bintAmount = BigInt(amtLovelace);
 
@@ -147,8 +145,7 @@ const App: React.FC = () => {
         // this is the same as the one we just did, but now for the receiver
         const supportedWallet = walletChoice as SupportedWalletName;
         const browserWallet = await mkBrowserWallet(supportedWallet);
-        const receiverAddr32 = await browserWallet.getChangeAddress();
-        const receiverAddr = unAddressBech32(receiverAddr32);
+        const receiverAddr = await browserWallet.getChangeAddress();
         const receiver: Party = { address: receiverAddr };
 
         console.log(`Connecting to runtime instance...`);
@@ -184,7 +181,6 @@ const App: React.FC = () => {
         const choiceConfirm = await browserWallet.waitConfirmation(choiceTxn);
         console.log(`Choice confirm is: ${choiceConfirm}`);
         
-
         // end, check the wallet for funds
     };
 
