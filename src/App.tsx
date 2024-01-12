@@ -92,8 +92,10 @@ const App: React.FC = () => {
             runtimeURL: "https://marlowe-runtime-preprod-web.demo.scdev.aws.iohkdev.io",
         });
 
-        // start here
+        // convert ADA to Lovelace
         const amtLovelace = parseADA(amtRef);
+
+        // build contract
         const sGiftContract = mkSmartGift(amtLovelace, buyer, receiver);
 
         console.log(`Submitting contract to the blockchain...`);
@@ -104,8 +106,8 @@ const App: React.FC = () => {
         const contractConfirm = await browserWallet.waitConfirmation(txnID);
         console.log(`Contract creating txn is: ${contractConfirm}`);
         
+        // formulate Deposit txn
         const bintAmount = BigInt(amtLovelace);
-
         const deposit: IDeposit = {
             input_from_party: buyer,
             that_deposits: bintAmount,
@@ -113,13 +115,13 @@ const App: React.FC = () => {
             into_account: receiver,
         };
 
+        // formulate Deposit as Input
         const depositInputs: Input[] = [deposit];
         const depositRequest: ApplyInputsRequest = {
             inputs: depositInputs,
         };
 
         console.log(`Applying deposit txn...`);
-
         const depositTxnID = await runtimeLifecycle.contracts.applyInputs(ctcID, depositRequest);
         const depositConfirm = await browserWallet.waitConfirmation(depositTxnID);
 
@@ -131,15 +133,6 @@ const App: React.FC = () => {
         setView(views.SPEND_GIFT);
     };
     
-    /**
-     * Build this for the demo
-     * 
-     * 1. Wallet stuff same as before -- don't build
-     * 2. Connect to runtime -- don't build
-     * 3. Formulate choices
-     * 4. ApplyInputs and wait confirmation
-     * 5. Verify deposit to correct address
-     */
     const handleChoiceSubmit = async (choiceNum: number) => {
         setChoiceFlag(true);
         // this is the same as the one we just did, but now for the receiver
@@ -153,25 +146,25 @@ const App: React.FC = () => {
             walletName: supportedWallet,
             runtimeURL: RUNTIME_URL,
         });
-        // start here
-
-        const choiceName: ChoiceName = "purchase";
-
+        
+        // setup choice
+        const choiceName: ChoiceName = "purchase";// from SC tsx file
         const choices: ChoiceId = {
             choice_name: choiceName,
             choice_owner: receiver,
         };
-
         const purchaseChoice: IChoice = {
             for_choice_id: choices,
             input_that_chooses_num: BigInt(choiceNum),
         };
 
+        // formulate choice as Input
         const choiceInputs: Input[] = [purchaseChoice];
         const choiceRequest: ApplyInputsRequest = {
             inputs: choiceInputs,
         };
 
+        // get contractIds related to my address
         const giftID = await recRuntimeLifecycle.contracts.getContractIds();
 
         console.log(`Applying input choice...`);
