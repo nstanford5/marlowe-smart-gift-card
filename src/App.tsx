@@ -1,14 +1,14 @@
 // React && helper imports
 import './App.css';
 import React from 'react';
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import { views, constants, RUNTIME_URL } from './utils/constants.tsx';
 import IntroPage from './components/IntroPage.js';
 import ButtonAppBar from './components/ButtonAppBar.js';
 import SmartGift from './components/SmartGift.js';
 import BuyGift from './components/BuyGift.js';
 import SpendGift from './components/SpendGift.js';
-import {mkSmartGift, smartGiftTag} from './components/SmartGiftContract.tsx';
+import { mkSmartGift } from './components/SmartGiftContract.tsx';
 
 // marlowe TS-SDK imports
 import { mkRuntimeLifecycle } from '@marlowe.io/runtime-lifecycle/browser';
@@ -60,22 +60,11 @@ const App: React.FC = () => {
         console.log(`Browser Wallet Extensions: ${names}`);
     }, []);
 
-    // this can probably move
+    // TODO -- this can probably move
     const buySmartGift = () => {
         setView(views.BUY_GIFT);
     };
 
-    /**
-     * 1st -- Build this for the demo
-     * 
-     * 1. Prepare addresses
-     * 2. Connect to runtime
-     * 3. Build Smart Contract -- start here
-     * 4. Submit contract and wait confirmation
-     * 5. Prepare and submit deposit, wait confirmation
-     * 6. Choice from receiver
-     * 7. Apply input choices
-     */
     const handleBuyGift = async (amtRef: number, toAddrRef: string) => {
         setBuyFlag(true);
 
