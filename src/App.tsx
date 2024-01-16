@@ -90,7 +90,6 @@ const App: React.FC = () => {
         console.log(`Submitting contract to the blockchain...`);
         const [ctcID, txnID] = await runtimeLifecycle.contracts.createContract({
             contract: sGiftContract,
-            minimumLovelaceUTxODeposit: 3_000_000,
         });
         const contractConfirm = await browserWallet.waitConfirmation(txnID);
         console.log(`Contract creating txn is: ${contractConfirm}`);
