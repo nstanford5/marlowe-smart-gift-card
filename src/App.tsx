@@ -43,7 +43,7 @@ const App: React.FC = () => {
     let names: string[] = [];
 
     // converts ADA to Lovelace
-    const parseADA = (num: number) => {
+    const adaToLovelace = (num: number) => {
         const lovelace = num * 1000000;
         console.log(`The number you entered is: ${num} ADA\n` +
                             `We converted that to ${lovelace} lovelace`);
@@ -82,7 +82,7 @@ const App: React.FC = () => {
         });
 
         // convert ADA to Lovelace
-        const amtLovelace = parseADA(amtRef);
+        const amtLovelace = adaToLovelace(amtRef);
 
         // build contract
         const sGiftContract = mkSmartGift(amtLovelace, buyer, receiver);
